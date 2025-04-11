@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/konva@8.3.14/konva.min.js"></script>
+  <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <title>Lens simulator</title>
+</head>
+
+<body>
+  <!-- Slider for blur control -->
+  <input type="range" id="slider" min="0" max="10" value="0" step="0.1" />
+  <p>Blur Intensity: <span id="blur-value">0</span></p>
+
+  <!-- Container for Konva stage -->
+  <div id="container"></div>
+
+  <script>
+    // Step 1: Set up the Konva stage and layer
+    const stage = new Konva.Stage({
+      container: 'container',
+      width: 500,
+      height: 500,
+    });
+
+    const layer = new Konva.Layer();
+    stage.add(layer);
+
+    // Step 2: Load an image
+    const imageObj = new Image();
+    imageObj.crossOrigin = 'Anonymous';
+    imageObj.src = 'https://i.redd.it/rzsw5sqkg08b1.png'; //'https://t3.ftcdn.net/jpg/00/07/13/30/360_F_7133022_0wznkyr40tqJJGmN428q5f7xxWpQcDOT.jpg'; // Replace with your image URL
+    imageObj.onload = function () {
+      const konvaImage = new Konva.Image({
+        x: 50,
+        y: 50,
+        image: imageObj,
+        width: 400,
+        height: 300,
+      });
+      // Add the image to the layer
+      layer.add(konvaImage);
+
+      // Step 3: Apply a blur filter to the image
+      konvaImage.cache(); // Cache the image for better performance
+      konvaImage.filters([Konva.Filters.Blur]);
+      konvaImage.blurRadius(10); // Initial blur radius
+      layer.batchDraw(); // Redraw the layer
+
+      // Step 4: Add a slider to control the blur intensity
+      const slider = document.getElementById('slider');
+      const blurValue = document.getElementById('blur-value');
+
+      slider.addEventListener('input', function () {
+        const blurRadius = parseFloat(slider.value);
+        konvaImage.blurRadius(blurRadius); // Update blur radius
+        blurValue.textContent = blurRadius.toFixed(1); // Update displayed value
+        layer.batchDraw(); // Redraw the layer
+      });
+    };
+  </script>
+</body>
+</html>

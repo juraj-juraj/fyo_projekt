@@ -84,9 +84,48 @@ export class OpticalSystem{
      * @description - Exports the parameters and positions of the lenses in the system
      */
     exportLenses(){
-        ;
+        const buffer = [];
+        let position = 0;
+        for(let index in this.elements){
+            if(this.elements[index].subset(math.index(1,0)) === 0){
+                const length = this.elements[index].subset(math.index(0,1));
+                buffer.push(new OpticalElementInfo(OpticalElementType.ENVIRONMENT, position, length));
+            }
+            else{
+                const focal_length = (-1)/this.elements[index].subset(math.index(1,0));
+                const type = focal_length > 0 ? OpticalElementType.LENS_CONVEX : OpticalElementType.LENS_CONCAVE;
+                buffer.push(new OpticalElementInfo(type, position, focal_length));
+            }
+            position += this.elements[index].subset(math.index(0,1));
+        }
+        return buffer;
     }
 };
+
+export const OpticalElementType = Object.freeze({
+    LENS_CONCAVE: "lens_concave",
+    LENS_CONVEX: "lens_convex",
+    ENVIRONMENT: "environment",
+    MIRROR: "mirror"
+});
+
+export class OpticalElementInfo{
+    /**
+     * 
+     * @param {OpticalElementType} type 
+     * @param {number} position 
+     * @param {number} length - If environment, length of the element, if lens, focal length
+     */
+    constructor(type, position, length){
+        /** @type {OpticalElementType} */
+        this.type = type;
+        /** @type {number} */
+        this.position = position;
+        /** @type {number} */
+        this.length = length;
+    }
+}
+
 
 export function createEnvMatrix(length) {
     return math.matrix([[1, length], [0, 1]]);
@@ -109,20 +148,14 @@ export function computeFocusPoint(point){
     return new BeamPoint(x + point.x, math.matrix([[0], [ ray.subset(math.index(1,0)) ]]));
 }
 
-export function prepareSystem(matrices){
-    matrices.reverse();
-    return matrices.reduce((acc, matrix) => math.multiply(acc, matrix), math.identity(2));
-}
-
-export function stepCompute(input, system_matrices){
-    let buffer = [input];
-    for(let index in system_matrices){
-        console.log("matrix: ", system_matrices[index]);
-        console.log("input: ", buffer.at(-1));
-        let temp = math.multiply(system_matrices[index], buffer.at(-1));
-        console.log("results: ", temp);
-        buffer.push(temp);
-    }
+/**
+ * 
+ * @param {BeamPoint} input 
+ * @param {OpticalSystem} system 
+ */
+export function marchRayToFocus(input, system){
+    const buffer = system.marchRay(input);
+    buffer.push(computeFocusPoint(buffer.at(-1)));
     return buffer;
 }
 

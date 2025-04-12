@@ -52,51 +52,62 @@
     import * as Scene from './scene.js';
     import "./konva.js";
 
-    window.addEventListener('resize', function() {
-      stage.width(window.innerWidth);
-      stage.height(window.innerHeight);
-      layer.draw();
-    });
+    const canvasContainer = document.getElementById('visualization');
+    const canvasWidth = canvasContainer.clientWidth;
+    const canvasHeight = canvasContainer.clientHeight;
 
-    const system = new RayTracing.OpticalSystem([RayTracing.createEnvMatrix(150), RayTracing.createLensMatrix(-100), RayTracing.createEnvMatrix(100), RayTracing.createLensMatrix(50)]);
-    const input_vector = RayTracing.createInput(10, 0);
-    const rays = system.marchRay(input_vector);
-    rays.push(RayTracing.computeFocusPoint(rays.at(-1))); // Fixed the syntax error
+    const convexImage = new Image();
+    convexImage.src = './convex.png';
+    const concaveImage = new Image();
+    concaveImage.src = './concave.png';
 
-    console.log("rays: ", rays);
-
-    console.log("width: " + window.innerWidth);
-    console.log("height: " + window.innerHeight);
-
-    // Initialize Konva stage
+        // Initialize Konva stage
     const stage = new Konva.Stage({
       container: 'canvas-container',
-      width: window.innerWidth,
-      height: window.innerHeight,
+      width: canvasWidth,
+      height: canvasHeight,
     });
+    
 
-    const sceneModel = new Scene.Model(stage, window.innerHeight, window.innerWidth);
-    sceneModel.batchElements(Scene.drawRay(rays));
-    sceneModel.draw();
+    const system = new RayTracing.OpticalSystem([RayTracing.createEnvMatrix(150), RayTracing.createLensMatrix(200), RayTracing.createEnvMatrix(100), RayTracing.createLensMatrix(50)]);
+    
+    const input_top = RayTracing.createInput(10, 0);
+    const top_ray = RayTracing.marchRayToFocus(input_top, system);
+    const input_bottom = RayTracing.createInput(-10, 0);
+    const bottom_ray = RayTracing.marchRayToFocus(input_bottom, system);
 
     // const layer = new Konva.Layer();
     // stage.add(layer);
-
-    // for(let i = 0; i < (rays.length - 1); i++){
-    //   const start_ray = rays[i]
-    //   const end_ray = rays[i + 1]
-    //   // Draw the ray from start_ray to end_ray
-    //   const line = new Konva.Line({
-    //     points: [start_ray.x, start_ray.y, end_ray.x, end_ray.y],
-    //     stroke: 'blue',
-    //     strokeWidth: 2,
-    //   });
-    //   layer.add(line);
-    // }
-
-    // // Add a layer to the stage
-
+    // const imageObj = new Image();
+    // imageObj.src = './convex.png';
+    // const konvaImage = new Konva.Image({
+    //   x: 0,
+    //   y: 0,
+    //   image: imageObj,
+    //   width: 100,   // Optional: scale the image
+    //   height: 200,  // Optional: scale the image
+    // });
+    // layer.add(konvaImage);
+    // const konvaImage2 = new Konva.Image({
+    //   x: 100,
+    //   y: 0,
+    //   image: imageObj,
+    //   width: 100,   // Optional: scale the image
+    //   height: 200,  // Optional: scale the image
+    // });
+    // layer.add(konvaImage2);
     // layer.draw();
+
+    const sceneModel = new Scene.Model(stage);
+    const lenses_info = system.exportLenses();
+    sceneModel.drawLenses(lenses_info, top_ray, convexImage, concaveImage);
+
+    sceneModel.drawRay(top_ray);
+    sceneModel.drawRay(bottom_ray);
+
+    sceneModel.draw();
+
+
   </script>
 </body>
 </html>

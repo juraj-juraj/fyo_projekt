@@ -79,6 +79,13 @@ export class OpticalSystem{
         }
         return buffer;
     }
+
+    /**
+     * @description - Exports the parameters and positions of the lenses in the system
+     */
+    exportLenses(){
+        ;
+    }
 };
 
 export function createEnvMatrix(length) {
@@ -119,15 +126,4 @@ export function stepCompute(input, system_matrices){
     return buffer;
 }
 
-    // const t1 = createEnvMatrix(15);
-    // const l1 = createLensMatrix(10);
-    // const t2 = createEnvMatrix(5);
-    // const l2 = createLensMatrix(-20);
-    // const input_vector = createInput(1, 0);
 
-    // const beam_vectors = stepCompute(input_vector, [t1,l1,t2,l2]);
-    // console.log(beam_vectors);
-
-    // const system = new OpticalSystem([createEnvMatrix(15), createLensMatrix(10), createEnvMatrix(5), createLensMatrix(-20)]);
-    // const rays = system.marchRay(input_vector);
-    // console.log("rays: ", rays);

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xml:lang="en">
 <head>
-  <!-- <script src="https://cdn.jsdelivr.net/npm/konva@9.3.20/konva.min.js"></script> -->
   <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
   <script type="module" src="konva.js"></script>
   <script type="module" src="rayCalculator.js"></script>
@@ -50,6 +49,7 @@
   </div>
   <script type="module">
     import * as RayTracing from './rayCalculator.js';
+    import * as Scene from './scene.js';
     import "./konva.js";
 
     window.addEventListener('resize', function() {
@@ -57,13 +57,6 @@
       stage.height(window.innerHeight);
       layer.draw();
     });
-    // Additional script to handle slider input and blur effect
-    // const slider = document.getElementById('slider');
-    // const blurValue = document.getElementById('blur-value');
-
-    // slider.addEventListener('input', function() {
-    //   blurValue.textContent = this.value;
-    // });
 
     const system = new RayTracing.OpticalSystem([RayTracing.createEnvMatrix(150), RayTracing.createLensMatrix(-100), RayTracing.createEnvMatrix(100), RayTracing.createLensMatrix(50)]);
     const input_vector = RayTracing.createInput(10, 0);
@@ -81,24 +74,29 @@
       width: window.innerWidth,
       height: window.innerHeight,
     });
-    const layer = new Konva.Layer();
-    stage.add(layer);
 
-    for(let i = 0; i < (rays.length - 1); i++){
-      const start_ray = rays[i]
-      const end_ray = rays[i + 1]
-      // Draw the ray from start_ray to end_ray
-      const line = new Konva.Line({
-        points: [start_ray.x, start_ray.y, end_ray.x, end_ray.y],
-        stroke: 'blue',
-        strokeWidth: 2,
-      });
-      layer.add(line);
-    }
+    const sceneModel = new Scene.Model(stage, window.innerHeight, window.innerWidth);
+    sceneModel.batchElements(Scene.drawRay(rays));
+    sceneModel.draw();
 
-    // Add a layer to the stage
+    // const layer = new Konva.Layer();
+    // stage.add(layer);
 
-    layer.draw();
+    // for(let i = 0; i < (rays.length - 1); i++){
+    //   const start_ray = rays[i]
+    //   const end_ray = rays[i + 1]
+    //   // Draw the ray from start_ray to end_ray
+    //   const line = new Konva.Line({
+    //     points: [start_ray.x, start_ray.y, end_ray.x, end_ray.y],
+    //     stroke: 'blue',
+    //     strokeWidth: 2,
+    //   });
+    //   layer.add(line);
+    // }
+
+    // // Add a layer to the stage
+
+    // layer.draw();
   </script>
 </body>
 </html>

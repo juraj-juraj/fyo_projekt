@@ -17,7 +17,7 @@
       <h1>Ray Optics Simulator</h1>
       <p>This tool visualizes how a light ray travels through a series of optical to eye.</p>
     </header>
-    <img src="eye_diagram_clipped.png" alt="Logo" class="logo" />
+    <img src="eyeDiagramClipped.png" alt="Logo" class="logo" />
 
     <div id="visualization">
       <div id="canvas-container"></div>
@@ -144,9 +144,9 @@
       try {
         // Load images and assign to global variables
         [convexImage, concaveImage, eyeImage] = await Promise.all([
-          loadImage('convex.png'),
-          loadImage('concave.png'),
-          loadImage('eye_diagram_clipped.png')
+          loadImage('convexI.png'),
+          loadImage('concaveI.png'),
+          loadImage('eyeDiagramClipped.png')
         ]);
 
         const angleSlider = document.getElementById('eyeFocalDistanceSlider');

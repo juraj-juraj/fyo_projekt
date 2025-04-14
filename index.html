@@ -152,7 +152,8 @@
     updateButton.addEventListener('click', () => {
       const textarea = document.getElementById('opticalSystemTextarea').value;
       const parsed_configuration = parseConfiguration(textarea);
-      console.log("Current configuration: ", configuration);
+      console.log("new_configuration:", parsed_configuration);
+      
       configuration.optical_elements = parsed_configuration.optical_elements;
       configuration.eye_optic = parsed_configuration.eye_optic;
       const eyeFocalSlider = document.getElementById('eyeFocalDistanceSlider');

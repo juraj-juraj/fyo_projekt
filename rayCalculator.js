@@ -36,6 +36,12 @@ export class OpticalSystem{
     constructor(elements){
         /** @type {array} */
         this.elements = elements;
+
+        this.at = this.at.bind(this);
+        this.len = this.len.bind(this);
+        this.update = this.update.bind(this);
+        this.marchRay = this.marchRay.bind(this);
+        this.exportLenses = this.exportLenses.bind(this);
     }
 
     /**
@@ -58,14 +64,14 @@ export class OpticalSystem{
      */
     update(index, matrix){
         if(index < 0){
-            index = this.elements.length() + index;
+            index = this.elements.length + index;
         }
         this.elements[index] = matrix;
     }
 
     /**
      * @param {math.matrix} input
-     * @returns {array} - Array of BeamPoint objects
+     * @returns {BeamPoint[]} - Array of BeamPoint objects
      * @description Marches the ray through the optical system
      */
     marchRay(input){
@@ -146,6 +152,17 @@ export function computeFocusPoint(point){
     const ray = point.getRay();
     const x = (-1) * ray.subset(math.index(0,0)) / ray.subset(math.index(1,0)); 
     return new BeamPoint(x + point.x, math.matrix([[0], [ ray.subset(math.index(1,0)) ]]));
+}
+
+/**
+ * 
+ * @param {BeamPoint} point 
+ * @returns {number} - The distance to the focus point
+ */
+export function focusDistance(point){
+    const ray = point.getRay();
+    const x = (-1) * ray.subset(math.index(0,0)) / ray.subset(math.index(1,0));
+    return x;
 }
 
 /**

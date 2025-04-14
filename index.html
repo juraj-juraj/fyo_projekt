@@ -15,36 +15,27 @@
   <div class="container">
     <header>
       <h1>Ray Optics Simulator</h1>
-      <p>This tool visualizes how a light ray travels through a series of optical elements using Konva.js.</p>
+      <p>This tool visualizes how a light ray travels through a series of optical to eye.</p>
     </header>
 
     <div id="visualization">
-      <!-- Konva will render the canvas here -->
       <div id="canvas-container"></div>
     </div>
 
     <div class="controls">
       <div class="sliders">
-        <label>
-          Ray Angle:
-          <input type="range" id="angleSlider" min="-45" max="45" value="0" />
-        </label>
-        <label>
-          Ray Intensity:
-          <input type="range" id="intensitySlider" min="0" max="100" value="50" />
-        </label>
+          <h2>Change eye focal distance: <span id="focalDistance"></span></h2>
+          <input type="range" id="eyeFocalDistanceSlider" min="18" max="22" value="20" step="0.1" />
       </div>
 
       <div class="textboxes">
-        <input type="text" id="textbox1" placeholder="Enter wavelength" />
-        <input type="text" id="textbox2" placeholder="Enter medium index" />
+        <h2>Define the Optical system</h2>
+      
+        <p>Write definition of the optical system in the textarea below:</p>
+        <textarea id="opticalSystemTextarea"></textarea>
+        <button id="updateButton">Update</button>
       </div>
 
-      <div class="buttons">
-        <button id="startBtn">Start</button>
-        <button id="resetBtn">Reset</button>
-        <button id="addElementBtn">Add Element</button>
-      </div>
     </div>
   </div>
   <script type="module">
@@ -52,61 +43,115 @@
     import * as Scene from './scene.js';
     import "./konva.js";
 
+    const DEFAULT_EYE_FOCAL= 20;
+    const DEFAULT_SETUP = "environment 50 -> lens 100 -> environment 100 -> eye";
+
+    let configuration = {
+      optical_elements: [RayTracing.createEnvMatrix(50) ,RayTracing.createLensMatrix(100) ,RayTracing.createEnvMatrix(40)],
+      eye_optic: DEFAULT_EYE_FOCAL,
+      input_ray_y: 12,
+      input_ray_theta: 0,
+
+    }
+
     const canvasContainer = document.getElementById('visualization');
     const canvasWidth = canvasContainer.clientWidth;
     const canvasHeight = canvasContainer.clientHeight;
 
-    const convexImage = new Image();
-    convexImage.src = './convex.png';
-    const concaveImage = new Image();
-    concaveImage.src = './concave.png';
-
-        // Initialize Konva stage
     const stage = new Konva.Stage({
       container: 'canvas-container',
       width: canvasWidth,
       height: canvasHeight,
     });
-    
-
-    const system = new RayTracing.OpticalSystem([RayTracing.createEnvMatrix(150), RayTracing.createLensMatrix(200), RayTracing.createEnvMatrix(100), RayTracing.createLensMatrix(50)]);
-    
-    const input_top = RayTracing.createInput(10, 0);
-    const top_ray = RayTracing.marchRayToFocus(input_top, system);
-    const input_bottom = RayTracing.createInput(-10, 0);
-    const bottom_ray = RayTracing.marchRayToFocus(input_bottom, system);
-
-    // const layer = new Konva.Layer();
-    // stage.add(layer);
-    // const imageObj = new Image();
-    // imageObj.src = './convex.png';
-    // const konvaImage = new Konva.Image({
-    //   x: 0,
-    //   y: 0,
-    //   image: imageObj,
-    //   width: 100,   // Optional: scale the image
-    //   height: 200,  // Optional: scale the image
-    // });
-    // layer.add(konvaImage);
-    // const konvaImage2 = new Konva.Image({
-    //   x: 100,
-    //   y: 0,
-    //   image: imageObj,
-    //   width: 100,   // Optional: scale the image
-    //   height: 200,  // Optional: scale the image
-    // });
-    // layer.add(konvaImage2);
-    // layer.draw();
-
     const sceneModel = new Scene.Model(stage);
-    const lenses_info = system.exportLenses();
-    sceneModel.drawLenses(lenses_info, top_ray, convexImage, concaveImage);
 
-    sceneModel.drawRay(top_ray);
-    sceneModel.drawRay(bottom_ray);
+    const convexImage = new Image();
+    convexImage.src = './convex.png';
+    const concaveImage = new Image();
+    concaveImage.src = './concave.png';
+    const eyeImage = new Image();
+    eyeImage.src = './eye_diagram_clipped.png';
+    const focalEyeRatio = 0.6646;
 
-    sceneModel.draw();
+    function parseConfiguration(textConfiguration){
+      const elementsDefinition = textConfiguration.split("->").map(line => line.trim());
+      console.log(elementsDefinition);
+      const newOpticalElements = [];
 
+      for(const elemDef in elementsDefinition){
+        const elem = elementsDefinition[elemDef].toLowerCase().split(" ");
+        
+        if(elem[0] == "lens"){
+          const lens = parseFloat(elem[1]);
+          newOpticalElements.push(RayTracing.createLensMatrix(lens));
+        } else if(elem[0] == "environment"){
+          const env = parseFloat(elem[1]);
+          newOpticalElements.push(RayTracing.createEnvMatrix(env));
+        }else if (elem[0] == "eye"){
+          ;
+        }
+        else {
+          console.error(`Unknown element: ${elem}`);
+        }
+      }
+      return newOpticalElements; 
+    }
+
+    function updateScene() {
+      sceneModel.clear();
+      const system = new RayTracing.OpticalSystem([...configuration.optical_elements, RayTracing.createLensMatrix(DEFAULT_EYE_FOCAL)]);
+
+      const input_top = RayTracing.createInput(configuration.input_ray_y, configuration.input_ray_theta);
+      const input_bottom = RayTracing.createInput((-1) * configuration.input_ray_y, configuration.input_ray_theta);
+
+      const top_ray_test = system.marchRay(input_top);
+      const lastFocalLen = Scene.computeEyeSize(top_ray_test.at(-1).y).width * focalEyeRatio;
+
+      // const actualFocalLen = lastFocalLen + (DEFAULT_EYE_FOCAL - configuration.eye_optic);
+      system.update(-1, RayTracing.createLensMatrix(lastFocalLen));
+
+      const top_ray = RayTracing.marchRayToFocus(input_top, system);
+      const bottom_ray = RayTracing.marchRayToFocus(input_bottom, system);
+
+      const lenses_info = system.exportLenses();
+      sceneModel.drawLenses(lenses_info, top_ray, convexImage, concaveImage, eyeImage);
+
+      sceneModel.drawRay(top_ray);
+      sceneModel.drawRay(bottom_ray);
+      
+      sceneModel.draw();
+    }
+    
+    window.onload = () => {
+      console.log("Window loaded");
+      const focalDistanceSpan = document.getElementById('focalDistance');
+      const angleSlider = document.getElementById('eyeFocalDistanceSlider');
+      const textBox = document.getElementById('opticalSystemTextarea');
+      textBox.value = DEFAULT_SETUP;
+
+      focalDistanceSpan.textContent = DEFAULT_EYE_FOCAL;
+      angleSlider.value = DEFAULT_EYE_FOCAL;
+      updateScene();
+    };
+
+    const eyeFocalDistanceSlider = document.getElementById('eyeFocalDistanceSlider');
+    eyeFocalDistanceSlider.addEventListener('input', (event) => {
+        const newValue = event.target.value;
+        focalDistanceSpan.textContent = newValue;
+        configuration.eye_optic = parseFloat(newValue);
+        updateScene();
+      });
+
+    const updateButton = document.getElementById('updateButton');
+    updateButton.addEventListener('click', () => {
+      const textarea = document.getElementById('opticalSystemTextarea').value;
+      const newOpticalElements = parseConfiguration(textarea);
+      console.log("Updating optical elements: ", newOpticalElements);
+      console.log("Current configuration: ", configuration);
+      // configuration.optical_elements = newOpticalElements;
+      console.log("New configuration: ", configuration);
+      updateScene();
+    });
 
   </script>
 </body>

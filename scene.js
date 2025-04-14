@@ -17,6 +17,12 @@ export class Model{
             draggable: true,
             x: 0,
             y: 0,
+            dragBoundFunc: function (pos) {
+                return {
+                  x: pos.x,
+                  y: this.y(),
+                };
+              },
         });
         this.layer.add(this.group);
 
@@ -25,6 +31,7 @@ export class Model{
         this.batchElements = this.batchElements.bind(this);
         this.drawRay = this.drawRay.bind(this);
         this.drawLenses = this.drawLenses.bind(this);
+        this.clear = this.clear.bind(this);
     }
 
     /**
@@ -68,10 +75,23 @@ export class Model{
      * @param {BeamPoint[]} rays 
      * @param {Image} convexImage 
      * @param {Image} concaveImage 
+     * @param {Image} eyeImage 
      */
-    drawLenses(lenses_info, rays, convexImage, concaveImage){
+    drawLenses(lenses_info, rays, convexImage, concaveImage, eyeImage){
         const enlarge_lens = 1.4;
         for(let i = 0; i < lenses_info.length; i++){
+            if (i === lenses_info.length - 1){
+                const eye_size = computeEyeSize(rays[i].y);
+                const eye = new Konva.Image({
+                    x: lenses_info[i].position - eye_size.height/3.8,
+                    y: (-1)* eye_size.height/2,
+                    image: eyeImage,
+                    width: eye_size.width,
+                    height: eye_size.height,
+                });
+                this.group.add(eye);
+                continue;
+            }
             if (lenses_info[i].type === OpticalElementType.LENS_CONVEX || lenses_info[i].type === OpticalElementType.LENS_CONCAVE){
                 const lens_size = Math.abs(rays[i].y) * 2 * enlarge_lens;
                 const image = lenses_info[i].type === OpticalElementType.LENS_CONVEX ? convexImage : concaveImage;
@@ -87,11 +107,42 @@ export class Model{
         }
     }
 
-    draw(){
+    drawOpticalAxis(){
         const groupBox = this.group.getClientRect(); 
 
-        this.group.scale({ x: this.layer.width() / groupBox.width * 0.7, y:this.layer.height() / groupBox.height *0.7 });
+        const opticalAxis = new Konva.Line({
+            points: [0, 0, groupBox.width*1.2, 0],
+            stroke: 'black',
+            strokeWidth: 1,
+            dash: [10, 5],
+            lineCap: 'round',
+        });
+        this.group.add(opticalAxis);
+    }
+
+    draw(){
+        this.drawOpticalAxis();
+
+        const groupBox = this.group.getClientRect();
+        const scaleRatio = this.layer.height() / groupBox.height * 0.7;
+        this.group.scale({ x: scaleRatio, y:scaleRatio });
         this.group.y(this.layer.height() / 2);
         this.layer.draw();
     }
+
+    clear(){
+        this.group.destroyChildren();
+        this.group.scale({ x: 1, y: 1 });
+    }
+}
+
+/**
+ * 
+ * @param {Number} pupilRadius 
+ * @returns {Number}
+ * @description - Computes the eye size based on the pupil radius
+ */
+export function computeEyeSize(pupilRadius){
+    const eyeSize = Math.abs(pupilRadius) * 2 * 3;
+    return {height: eyeSize, width: eyeSize * 1.12};
 }

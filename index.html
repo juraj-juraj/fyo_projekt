@@ -65,12 +65,18 @@
     });
     const sceneModel = new Scene.Model(stage);
 
-    const convexImage = new Image();
-    convexImage.src = 'convex.png';
-    const concaveImage = new Image();
-    concaveImage.src = 'concave.png';
-    const eyeImage = new Image();
-    eyeImage.src = 'eye_diagram_clipped.png';
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Failed to load image: ' + src));
+        img.src = src;
+      });
+    }
+
+    let convexImage = null;
+    let concaveImage = null;
+    let eyeImage = null;
     const focalEyeRatio = 0.6646;
 
     function parseConfiguration(textConfiguration){
@@ -99,6 +105,11 @@
     }
 
     function updateScene() {
+      if (!convexImage || !concaveImage || !eyeImage) {
+        console.warn("Images not loaded yet!");
+        return;
+      }
+      console.log("Updating scene with configuration: ", configuration);
       sceneModel.clear();
       
       const input_top = RayTracing.createInput(configuration.input_ray_y, configuration.input_ray_theta);
@@ -128,17 +139,29 @@
       sceneModel.draw();
     }
     
-    window.onload = () => {
-      const angleSlider = document.getElementById('eyeFocalDistanceSlider');
-      const textBox = document.getElementById('opticalSystemTextarea');
+    window.onload = async () => {
+      try {
+        // Load images and assign to global variables
+        [convexImage, concaveImage, eyeImage] = await Promise.all([
+          loadImage('convex.png'),
+          loadImage('concave.png'),
+          loadImage('eye_diagram_clipped.png')
+        ]);
 
-      textBox.value = DEFAULT_SETUP;
-      angleSlider.value = DEFAULT_EYE_FOCAL;
+        const angleSlider = document.getElementById('eyeFocalDistanceSlider');
+        const textBox = document.getElementById('opticalSystemTextarea');
 
-      const temp_conf = parseConfiguration(DEFAULT_SETUP);
-      configuration.optical_elements = temp_conf.optical_elements;
-      configuration.eye_optic = temp_conf.eye_optic;
-      updateScene();
+        textBox.value = DEFAULT_SETUP;
+        angleSlider.value = DEFAULT_EYE_FOCAL;
+
+        const temp_conf = parseConfiguration(DEFAULT_SETUP);
+        configuration.optical_elements = temp_conf.optical_elements;
+        configuration.eye_optic = temp_conf.eye_optic;
+        updateScene();
+
+      } catch (error) {
+        console.error('Error loading images:', error);
+      }
     };
 
     const eyeFocalDistanceSlider = document.getElementById('eyeFocalDistanceSlider');
@@ -152,7 +175,6 @@
     updateButton.addEventListener('click', () => {
       const textarea = document.getElementById('opticalSystemTextarea').value;
       const parsed_configuration = parseConfiguration(textarea);
-      console.log("new_configuration:", parsed_configuration);
 
       configuration.optical_elements = parsed_configuration.optical_elements;
       configuration.eye_optic = parsed_configuration.eye_optic;
@@ -163,7 +185,6 @@
         eyeFocalSlider.disabled = false;
         eyeFocalSlider.value = DEFAULT_EYE_FOCAL;
       }
-      console.log("New configuration: ", configuration);
       updateScene();
     });
 

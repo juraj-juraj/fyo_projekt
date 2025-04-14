@@ -7,14 +7,13 @@ export class Model{
     /**
      * 
      * @param {Konva.stage} stage 
-     * @param {Number} height 
-     * @param {Number} width 
      */
     constructor(stage){
 
         /** @type {Konva.Layer} */
         this.layer = new Konva.Layer();
         stage.add(this.layer);
+
         this.group = new Konva.Group({
             draggable: true,
             x: 0,
@@ -68,6 +67,7 @@ export class Model{
                 strokeWidth: LINE_WIDTH,
             });
             this.group.add(line);
+            line.zIndex(4);
         }
     }
 
@@ -93,6 +93,7 @@ export class Model{
                     height: eye_size.height,
                 });
                 this.group.add(eye);
+                eye.zIndex(2);
                 continue;
             }
             if (lenses_info[i].type == OpticalElementType.LENS_CONVEX || lenses_info[i].type == OpticalElementType.LENS_CONCAVE){
@@ -106,6 +107,7 @@ export class Model{
                     height: lens_size,
                 });
                 this.group.add(lensImage);
+                lensImage.zIndex(2);
             }
         }
     }
@@ -121,10 +123,25 @@ export class Model{
             lineCap: 'round',
         });
         this.group.add(opticalAxis);
+        opticalAxis.zIndex(3);
+    }
+
+    drawBoundingBox(){
+        const groupBox = this.group.getClientRect();
+        const boundingBox = new Konva.Rect({
+            x: 0,
+            y: (-1) * groupBox.height / 2,
+            width: groupBox.width,
+            height: groupBox.height,
+            fill: 'white',
+        });
+        this.group.add(boundingBox);
+        boundingBox.zIndex(0);
     }
 
     draw(){
         this.drawOpticalAxis();
+        this.drawBoundingBox();
 
         const groupBox = this.group.getClientRect();
         const scaleRatio = this.layer.height() / groupBox.height * 0.7;

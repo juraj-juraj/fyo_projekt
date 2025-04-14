@@ -17,7 +17,6 @@
       <h1>Ray Optics Simulator</h1>
       <p>This tool visualizes how a light ray travels through a series of optical to eye.</p>
     </header>
-    <img src="eyeDiagramClipped.png" alt="Logo" class="logo" />
 
     <div id="visualization">
       <div id="canvas-container"></div>
@@ -82,7 +81,6 @@
 
     function parseConfiguration(textConfiguration){
       const elementsDefinition = textConfiguration.split("->").map(line => line.trim());
-      console.log(elementsDefinition);
       const newOpticalElements = [];
       let eyeOptic = 0;
 
@@ -133,7 +131,6 @@
 
       const lenses_info = system.exportLenses();
       sceneModel.drawLenses(lenses_info, top_ray, convexImage, concaveImage, eyeImage, configuration.eye_optic !== 0);
-
       sceneModel.drawRay(top_ray);
       sceneModel.drawRay(bottom_ray);
       
@@ -142,7 +139,6 @@
     
     window.onload = async () => {
       try {
-        // Load images and assign to global variables
         [convexImage, concaveImage, eyeImage] = await Promise.all([
           loadImage('convexI.png'),
           loadImage('concaveI.png'),

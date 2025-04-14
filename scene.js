@@ -1,6 +1,8 @@
 import "./konva.js";
 import { BeamPoint, OpticalElementInfo, OpticalElementType } from "./rayCalculator.js";
 
+const LINE_WIDTH = 0.6;
+
 export class Model{
     /**
      * 
@@ -63,7 +65,7 @@ export class Model{
             const line = new Konva.Line({
                 points: [start_ray.x, start_ray.y, end_ray.x, end_ray.y],
                 stroke: 'blue',
-                strokeWidth: 1,
+                strokeWidth: LINE_WIDTH,
             });
             this.group.add(line);
         }
@@ -76,11 +78,12 @@ export class Model{
      * @param {Image} convexImage 
      * @param {Image} concaveImage 
      * @param {Image} eyeImage 
+     * @param {boolean} drawEye 
      */
-    drawLenses(lenses_info, rays, convexImage, concaveImage, eyeImage){
+    drawLenses(lenses_info, rays, convexImage, concaveImage, eyeImage, drawEye = true){
         const enlarge_lens = 1.4;
         for(let i = 0; i < lenses_info.length; i++){
-            if (i === lenses_info.length - 1){
+            if (i === lenses_info.length - 1 && drawEye){
                 const eye_size = computeEyeSize(rays[i].y);
                 const eye = new Konva.Image({
                     x: lenses_info[i].position - eye_size.height/3.8,
@@ -92,9 +95,9 @@ export class Model{
                 this.group.add(eye);
                 continue;
             }
-            if (lenses_info[i].type === OpticalElementType.LENS_CONVEX || lenses_info[i].type === OpticalElementType.LENS_CONCAVE){
+            if (lenses_info[i].type == OpticalElementType.LENS_CONVEX || lenses_info[i].type == OpticalElementType.LENS_CONCAVE){
                 const lens_size = Math.abs(rays[i].y) * 2 * enlarge_lens;
-                const image = lenses_info[i].type === OpticalElementType.LENS_CONVEX ? convexImage : concaveImage;
+                const image = lenses_info[i].type == OpticalElementType.LENS_CONVEX ? convexImage : concaveImage;
                 const lensImage = new Konva.Image({
                     x: lenses_info[i].position - lens_size/4,
                     y: (-1)* lens_size/2,
@@ -113,7 +116,7 @@ export class Model{
         const opticalAxis = new Konva.Line({
             points: [0, 0, groupBox.width*1.2, 0],
             stroke: 'black',
-            strokeWidth: 1,
+            strokeWidth: LINE_WIDTH,
             dash: [10, 5],
             lineCap: 'round',
         });

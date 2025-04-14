@@ -24,8 +24,8 @@
 
     <div class="controls">
       <div class="sliders">
-          <h2>Change eye focal distance: <span id="focalDistance"></span></h2>
-          <input type="range" id="eyeFocalDistanceSlider" min="18" max="22" value="20" step="0.1" />
+          <h2>Change eye focal distance</h2>
+          <input type="range" id="eyeFocalDistanceSlider" min="10" max="40" value="25" step="0.5" />
       </div>
 
       <div class="textboxes">
@@ -43,13 +43,13 @@
     import * as Scene from './scene.js';
     import "./konva.js";
 
-    const DEFAULT_EYE_FOCAL= 20;
-    const DEFAULT_SETUP = "environment 50 -> lens 100 -> environment 100 -> eye";
+    const DEFAULT_EYE_FOCAL= 25;
+    const DEFAULT_SETUP = "environment 20 -> lens 100 -> environment 30 -> eye";
 
     let configuration = {
-      optical_elements: [RayTracing.createEnvMatrix(50) ,RayTracing.createLensMatrix(100) ,RayTracing.createEnvMatrix(40)],
+      optical_elements: [],
       eye_optic: DEFAULT_EYE_FOCAL,
-      input_ray_y: 12,
+      input_ray_y: 5,
       input_ray_theta: 0,
 
     }
@@ -77,6 +77,7 @@
       const elementsDefinition = textConfiguration.split("->").map(line => line.trim());
       console.log(elementsDefinition);
       const newOpticalElements = [];
+      let eyeOptic = 0;
 
       for(const elemDef in elementsDefinition){
         const elem = elementsDefinition[elemDef].toLowerCase().split(" ");
@@ -88,33 +89,38 @@
           const env = parseFloat(elem[1]);
           newOpticalElements.push(RayTracing.createEnvMatrix(env));
         }else if (elem[0] == "eye"){
-          ;
+          eyeOptic = DEFAULT_EYE_FOCAL;
         }
         else {
           console.error(`Unknown element: ${elem}`);
         }
       }
-      return newOpticalElements; 
+      return {optical_elements: newOpticalElements, eye_optic: eyeOptic}; 
     }
 
     function updateScene() {
       sceneModel.clear();
-      const system = new RayTracing.OpticalSystem([...configuration.optical_elements, RayTracing.createLensMatrix(DEFAULT_EYE_FOCAL)]);
-
+      
       const input_top = RayTracing.createInput(configuration.input_ray_y, configuration.input_ray_theta);
       const input_bottom = RayTracing.createInput((-1) * configuration.input_ray_y, configuration.input_ray_theta);
 
-      const top_ray_test = system.marchRay(input_top);
-      const lastFocalLen = Scene.computeEyeSize(top_ray_test.at(-1).y).width * focalEyeRatio;
+      let system;
+      if(configuration.eye_optic === 0){
+        system = new RayTracing.OpticalSystem([...configuration.optical_elements]);
+      }
+      else{
+        system = new RayTracing.OpticalSystem([...configuration.optical_elements, RayTracing.createLensMatrix(DEFAULT_EYE_FOCAL)]);
 
-      // const actualFocalLen = lastFocalLen + (DEFAULT_EYE_FOCAL - configuration.eye_optic);
-      system.update(-1, RayTracing.createLensMatrix(lastFocalLen));
+        const top_ray_test = system.marchRay(input_top);
+        const lastFocalLen = Scene.computeEyeSize(top_ray_test.at(-1).y).width * focalEyeRatio;
 
+        system.update(-1, RayTracing.createLensMatrix(lastFocalLen + configuration.eye_optic - DEFAULT_EYE_FOCAL));
+      }
       const top_ray = RayTracing.marchRayToFocus(input_top, system);
       const bottom_ray = RayTracing.marchRayToFocus(input_bottom, system);
 
       const lenses_info = system.exportLenses();
-      sceneModel.drawLenses(lenses_info, top_ray, convexImage, concaveImage, eyeImage);
+      sceneModel.drawLenses(lenses_info, top_ray, convexImage, concaveImage, eyeImage, configuration.eye_optic !== 0);
 
       sceneModel.drawRay(top_ray);
       sceneModel.drawRay(bottom_ray);
@@ -123,21 +129,21 @@
     }
     
     window.onload = () => {
-      console.log("Window loaded");
-      const focalDistanceSpan = document.getElementById('focalDistance');
       const angleSlider = document.getElementById('eyeFocalDistanceSlider');
       const textBox = document.getElementById('opticalSystemTextarea');
-      textBox.value = DEFAULT_SETUP;
 
-      focalDistanceSpan.textContent = DEFAULT_EYE_FOCAL;
+      textBox.value = DEFAULT_SETUP;
       angleSlider.value = DEFAULT_EYE_FOCAL;
+
+      const temp_conf = parseConfiguration(DEFAULT_SETUP);
+      configuration.optical_elements = temp_conf.optical_elements;
+      configuration.eye_optic = temp_conf.eye_optic;
       updateScene();
     };
 
     const eyeFocalDistanceSlider = document.getElementById('eyeFocalDistanceSlider');
     eyeFocalDistanceSlider.addEventListener('input', (event) => {
         const newValue = event.target.value;
-        focalDistanceSpan.textContent = newValue;
         configuration.eye_optic = parseFloat(newValue);
         updateScene();
       });
@@ -145,10 +151,17 @@
     const updateButton = document.getElementById('updateButton');
     updateButton.addEventListener('click', () => {
       const textarea = document.getElementById('opticalSystemTextarea').value;
-      const newOpticalElements = parseConfiguration(textarea);
-      console.log("Updating optical elements: ", newOpticalElements);
+      const parsed_configuration = parseConfiguration(textarea);
       console.log("Current configuration: ", configuration);
-      // configuration.optical_elements = newOpticalElements;
+      configuration.optical_elements = parsed_configuration.optical_elements;
+      configuration.eye_optic = parsed_configuration.eye_optic;
+      const eyeFocalSlider = document.getElementById('eyeFocalDistanceSlider');
+      if (configuration.eye_optic === 0) {
+        eyeFocalSlider.disabled = true;
+      } else {
+        eyeFocalSlider.disabled = false;
+        eyeFocalSlider.value = DEFAULT_EYE_FOCAL;
+      }
       console.log("New configuration: ", configuration);
       updateScene();
     });

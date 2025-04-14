@@ -66,11 +66,11 @@
     const sceneModel = new Scene.Model(stage);
 
     const convexImage = new Image();
-    convexImage.src = './convex.png';
+    convexImage.src = 'convex.png';
     const concaveImage = new Image();
-    concaveImage.src = './concave.png';
+    concaveImage.src = 'concave.png';
     const eyeImage = new Image();
-    eyeImage.src = './eye_diagram_clipped.png';
+    eyeImage.src = 'eye_diagram_clipped.png';
     const focalEyeRatio = 0.6646;
 
     function parseConfiguration(textConfiguration){
@@ -153,7 +153,7 @@
       const textarea = document.getElementById('opticalSystemTextarea').value;
       const parsed_configuration = parseConfiguration(textarea);
       console.log("new_configuration:", parsed_configuration);
-      
+
       configuration.optical_elements = parsed_configuration.optical_elements;
       configuration.eye_optic = parsed_configuration.eye_optic;
       const eyeFocalSlider = document.getElementById('eyeFocalDistanceSlider');

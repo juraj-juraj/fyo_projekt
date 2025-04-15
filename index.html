@@ -90,9 +90,19 @@
         
         if(elem[0] == "lens"){
           const lens = parseFloat(elem[1]);
+          if (isNaN(lens) || lens == 0) {
+            alert(`Invalid lens focal length: ${elem[1]}`);
+            console.error(`Invalid lens focal length: ${elem[1]}`);
+            return parseConfiguration(DEFAULT_SETUP);
+          }
           newOpticalElements.push(RayTracing.createLensMatrix(lens));
         } else if(elem[0] == "environment"){
           const env = parseFloat(elem[1]);
+          if (isNaN(env)) {
+            alert(`Invalid environment focal length: ${elem[1]}`);
+            console.error(`Invalid environment focal length: ${elem[1]}`);
+            return parseConfiguration(DEFAULT_SETUP);
+          }
           newOpticalElements.push(RayTracing.createEnvMatrix(env));
         }else if (elem[0] == "eye"){
           eyeOptic = DEFAULT_EYE_FOCAL;

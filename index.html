@@ -109,6 +109,8 @@
         }
         else {
           console.error(`Unknown element: ${elem}`);
+          alert(`Unknown element: ${elem}`);
+          return parseConfiguration(DEFAULT_SETUP);
         }
       }
       return {optical_elements: newOpticalElements, eye_optic: eyeOptic}; 

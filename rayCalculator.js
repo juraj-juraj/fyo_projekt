@@ -150,6 +150,9 @@ export function createInput(y, angle){
  */
 export function computeFocusPoint(point){
     const ray = point.getRay();
+    if(ray.subset(math.index(1,0)) === 0){
+        return point;
+    }
     const x = (-1) * ray.subset(math.index(0,0)) / ray.subset(math.index(1,0)); 
     return new BeamPoint(x + point.x, math.matrix([[0], [ ray.subset(math.index(1,0)) ]]));
 }

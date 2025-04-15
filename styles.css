@@ -37,8 +37,9 @@ header {
     display: flex;
     gap: 60px;
     align-items: flex-start;
+    flex-wrap: wrap;
 }
-  
+
 .sliders {
     /* flex: 0 0 250px; /* fixed width of 250px */
     display: flex;
@@ -52,6 +53,7 @@ header {
     display: flex;
     flex-direction: column;
     gap: 0px;
+    min-width: 300px;
 }
 
 /* Textarea: appear as two rows high; adjust height as needed */

@@ -77,6 +77,7 @@
     let convexImage = null;
     let concaveImage = null;
     let eyeImage = null;
+    let dragSymbol = null;
     const focalEyeRatio = 0.6646;
 
     function parseConfiguration(textConfiguration){
@@ -137,14 +138,30 @@
       sceneModel.draw();
     }
     
+    function positionDrag(dragSymbol, stage){
+      const dragImage = new Konva.Image({
+        image: dragSymbol,
+        draggable: false,
+        x: 0.5 * stage.width(),
+        y: 0.85 * stage.height(),
+        width: 0.05 * stage.width(),
+        height: 0.05 * stage.width() * (dragSymbol.height / dragSymbol.width),
+      });
+      const layer = new Konva.Layer();
+      layer.add(dragImage);
+      stage.add(layer);
+    }
+
     window.onload = async () => {
       try {
-        [convexImage, concaveImage, eyeImage] = await Promise.all([
+        [convexImage, concaveImage, eyeImage, dragSymbol] = await Promise.all([
           loadImage('convexI.png'),
           loadImage('concaveI.png'),
-          loadImage('eyeDiagramClipped.png')
+          loadImage('eyeDiagramClipped.png'),
+          loadImage('drag_symbol.png'),
         ]);
 
+        positionDrag(dragSymbol, stage);
         const angleSlider = document.getElementById('eyeFocalDistanceSlider');
         const textBox = document.getElementById('opticalSystemTextarea');
 

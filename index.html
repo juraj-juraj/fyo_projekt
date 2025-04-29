@@ -207,9 +207,10 @@
       const eyeFocalSlider = document.getElementById('eyeFocalDistanceSlider');
       if (configuration.eye_optic === 0) {
         eyeFocalSlider.disabled = true;
+        eyeFocalSlider.value = DEFAULT_EYE_FOCAL;
       } else {
         eyeFocalSlider.disabled = false;
-        eyeFocalSlider.value = DEFAULT_EYE_FOCAL;
+        configuration.eye_optic = parseFloat(eyeFocalSlider.value);
       }
       updateScene();
     });
